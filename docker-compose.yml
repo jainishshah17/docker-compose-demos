@@ -7,39 +7,38 @@
 version: '2'
 services:
   artifactory_1:
-    image: alexistjfrog-docker-registry.bintray.io/artifactoryhaprimary:4.7.7
+    image: jfrog-docker-reg2.bintray.io/jfrog/artifactory-ha-primary:4.14.1
     volumes:
       - clusterhome:/var/opt/jfrog/cluster
     environment:
-      - DATABASE_CONNECTION_STRING=jdbc:mysql://mysqldb:3306/artdb?characterEncoding=UTF-8&elideSetAutoCommits=true
-      - DATABASE_USER=artifactory
-      - DATABASE_PASSWORD=password
-      - ART_PRIMARY_LICENSE
+      - ART_DATABASE_CONNECTION_STRING="jdbc:mysql://mysqldb:3306/artdb?characterEncoding=UTF-8&elideSetAutoCommits=true"
+      - ART_DATABASE_USER=artifactory
+      - ART_DATABASE_PASSWORD=password
       - ART_LICENSES
     depends_on:
       - mysqldb
 
   artifactory_2:
-    image: alexistjfrog-docker-registry.bintray.io/artifactoryhasecondary:4.7.7
+    image: jfrog-docker-reg2.bintray.io/jfrog/artifactory-ha-secondary:4.14.1
     volumes:
       - clusterhome:/var/opt/jfrog/cluster
     environment:
-      - PRIMARY_BASE_URL=http://artifactory_1:8081/artifactory
-      - ART_LOGIN=admin
-      - ART_PASSWORD=password
+      - ART_PRIMARY_BASE_URL=http://artifactory_1:8081/artifactory
+      - ART_LOGIN="_internal"
+      - ART_PASSWORD="b6a50c8a15ece8753e37cbe5700bf84f"
     depends_on:
       - artifactory_1
       - mysqldb
 
   nginx:
-    image: alexistjfrog-docker-registry.bintray.io/artifactoryhanginx:1.10.0
+    image: jfrog-docker-reg2.bintray.io/jfrog/nginx-art:4.14.1
     ports:
       - "80:80"
       - "443:443"
       - "5000-5010:5000-5010"
     environment:
-      - ART_LOGIN=admin
-      - ART_PASSWORD=password
+      - ART_LOGIN="_internal"
+      - ART_PASSWORD="b6a50c8a15ece8753e37cbe5700bf84f"
       - ART_PRIMARY_BASE_URL=http://artifactory_1:8081/artifactory
       #- ART_REVERSE_PROXY_METHOD=SUBDOMAIN
       #- ART_SERVER_NAME=mycluster.local
@@ -61,4 +60,3 @@ volumes:
     driver: local
   clusterhome:
     driver: local
-
